@@ -1,0 +1,33 @@
+require "json"
+require "byebug"
+
+data = File.read(ARGV[0]).split("\n")
+modify = false
+start_time = 0
+newlines = []
+
+newlines << data.shift + "\n"
+
+data.each do |line|
+  j = JSON.parse(line)
+
+  if modify
+    start_time += 0.1
+    j[0] = start_time
+  end
+
+  if j[2][0] == "\b"
+    modify = true
+    start_time = j[0]
+  end
+  modify = false if j[2][0] == "\e"
+
+  newlines << j.to_json + "\n"
+end
+
+f = File.open("new_#{ARGV[0]}", "w")
+
+newlines.each { |l| f << l }
+
+f.close
+puts "Created new_#{ARGV[0]}"
