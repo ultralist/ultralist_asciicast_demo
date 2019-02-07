@@ -1,5 +1,6 @@
+#!/usr/bin/env ruby
+
 require "json"
-require "byebug"
 
 data = File.read(ARGV[0]).split("\n")
 modify = false
@@ -12,7 +13,7 @@ data.each do |line|
   j = JSON.parse(line)
 
   if modify
-    start_time += 0.1
+    start_time += 0.05
     j[0] = start_time
   end
 
