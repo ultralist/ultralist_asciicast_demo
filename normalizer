@@ -1,29 +1,43 @@
 #!/usr/bin/env ruby
 
 require "json"
+require "byebug"
+
+APPEND_NORMALIZE_LINES = 1
+DELAY_BETWEEN_CHARACTER_PRESS = 0.08
+DELAY_BETWEEN_NEW_BEGIN = 4
 
 data = File.read(ARGV[0]).split("\n")
-modify = false
 start_time = 0
 newlines = []
+start_block_count = 0
 
 newlines << data.shift + "\n"
 
-data.each do |line|
-  j = JSON.parse(line)
+data.each_with_index do |line, idx|
+  line = JSON.parse(line)
 
-  if modify
-    start_time += 0.05
-    j[0] = start_time
+  nextline = JSON.parse(data[idx + 3]) if idx < data.length - 3
+
+  # only add a delay if it's one character pressed
+  # otherwise it's output from ultralist
+  if line[2].length <= 2
+    start_time += DELAY_BETWEEN_CHARACTER_PRESS
   end
 
-  if j[2][0] == "\b"
-    modify = true
-    start_time = j[0]
-  end
-  modify = false if j[2][0] == "\e"
+  # puts line[2][0].inspect
+  # if line[2][0] == "\e"
+  #   modify = false
+  # end
 
-  newlines << j.to_json + "\n"
+  if nextline && nextline[2][0] == "\b"
+    start_block_count += 1
+    start_time += DELAY_BETWEEN_NEW_BEGIN if start_block_count > 1
+  end
+
+  line[0] = start_time
+
+  newlines << line.to_json + "\n"
 end
 
 f = File.open("new_#{ARGV[0]}", "w")
